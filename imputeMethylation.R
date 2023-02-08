@@ -14,7 +14,7 @@ tcAll <- readRDS("unfilteredTCcounts.rds")
 meth_impute <- as.matrix(methAll)
 tc_impute <- as.matrix(tcAll)
 
-##set NAs to zero
+##set NAs to zero (will be ignored by boostme)
 tc_impute[is.na(tc_impute)] <- 0
 meth_impute[is.na(meth_impute)] <- 0
 
@@ -50,19 +50,21 @@ perc_complete <- impute_sites[complete.cases(impute_sites),]
 meth_complete <- meth_impute[rownames(meth_impute) %in% rownames(perc_complete),]
 tc_complete <- tc_impute[rownames(tc_impute) %in% rownames(perc_complete),]
 
-##save count data (unfiltered)
-save(meth_complete, tc_complete, file="completeImputedCountData.RData")
-save(perc_complete,file="completeImputedPercMethData.RData")
+##save count data (unfiltered) except for having NaNs removed after imputation
+saveRDS(meth_complete,file="completeImputedMethCounts.rds")
+saveRDS(tc_complete,file="completeImputedTcCounts.rds")
+saveRDS(perc_complete,file="completeImputedPercMethData.rds")
 
 
-##Filter for >= 5X median coverage, between 10 and 90% median percent methylation
+##Filter for >= 5X median coverage, between 10 and 90% median percent methylation (recommended but will need to see how much overlap you have with the clock site data) 
 keep <- apply(tc_complete, 1, function(x){median(x,na.rm=TRUE)})>=5&apply(perc_complete,1,function(x)(median(x,na.rm=T)))>=0.1&apply(perc_complete, 1, function(x)(median(x,na.rm=T)))<=0.9
 sum(keep)##total number of sites remaining after filtering
 meth_filtered <- meth_complete[keep,]
 tc_filtered <- tc_complete[keep,]
-perc_filtered <- complete_cayo_windows[keep,]
+perc_filtered <- perc_complete[keep,]
 
 
-#save filtered count data
-save(meth_filtered, tc_filtered, file="filteredCountData.RData")
-save(perc_filtered,file="filteredPercMethData.RData")
+#save filtered count data and perc meth matrix
+saveRDS(meth_filtered, file="filteredCompleteImputedMethData.rds")
+saveRDS(tc_filtered, file="filteredCompleteImputedTcData.rds")                                                                                                                              
+saveRDS(perc_filtered,file="filteredCompleteImputedPercMethData.rds")
